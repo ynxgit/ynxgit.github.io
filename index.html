@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black:    #0a0a0c;
+    --surface:  #111116;
+    --card:     #16161e;
+    --border:   #252530;
+    --border2:  #32323f;
+    --text:     #ededf0;
+    --muted:    #6b6b80;
+    --sub:      #9090a8;
+    --purple:   #9b6dff;
+    --purple2:  #7c4fe0;
+    --pink:     #e040a0;
+    --pink2:    #b8307a;
+    --glow-p:   rgba(155,109,255,0.18);
+    --glow-pk:  rgba(224,64,160,0.14);
+    --err:      #ff5c7a;
+    --radius:   12px;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background: var(--black);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    padding: 24px;
+    background-image:
+      radial-gradient(ellipse 60% 50% at 20% 10%, rgba(155,109,255,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 80% 90%, rgba(224,64,160,0.06) 0%, transparent 70%);
+  }
+
+  /* ── Auto-login splash ── */
+  #autologin-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+  }
+  #autologin-screen .al-avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 2px solid var(--purple);
+    object-fit: cover;
+    box-shadow: 0 0 24px var(--glow-p);
+  }
+  #autologin-screen .al-avatar-placeholder {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple2), var(--pink2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: 600;
+    box-shadow: 0 0 24px var(--glow-p);
+  }
+  #autologin-screen h2 { font-size: 1.25rem; font-weight: 500; }
+  #autologin-screen p  { color: var(--muted); font-size: .875rem; }
+  .pulse-ring {
+    width: 80px; height: 80px; border-radius: 50%;
+    border: 2px solid var(--purple);
+    animation: pulse-out 1.4s ease-out infinite;
+  }
+  @keyframes pulse-out {
+    0%   { opacity: .7; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.8); }
+  }
+  .spinner-wrap { position: relative; width: 80px; height: 80px; }
+  .spinner-wrap .pulse-ring { position: absolute; inset: 0; }
+
+  /* ── Card ── */
+  .card {
+    width: 100%;
+    max-width: 400px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 36px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, var(--glow-p) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -60px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, var(--glow-pk) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .logo {
+    margin-bottom: 28px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-mark {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--purple2) 0%, var(--pink) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .logo-text { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.01em; }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 28px;
+    gap: 2px;
+  }
+  .tab-btn {
+    flex: 1; border: none; background: transparent;
+    color: var(--muted); font-size: .875rem; font-weight: 500;
+    padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    transition: all .2s; font-family: inherit;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--purple2), var(--pink2));
+    color: #fff;
+    box-shadow: 0 2px 12px var(--glow-p);
+  }
+
+  /* ── Fields ── */
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block; font-size: .78rem; font-weight: 500;
+    color: var(--sub); margin-bottom: 6px; letter-spacing: .02em;
+  }
+  .field input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-size: .9rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .field input:focus {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px rgba(155,109,255,.12);
+  }
+  .field input.err { border-color: var(--err); }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── Server field ── */
+  .server-field {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    width: 100%; padding: 12px;
+    background: linear-gradient(135deg, var(--purple2) 0%, var(--pink2) 100%);
+    border: none; border-radius: 10px; color: #fff;
+    font-size: .9rem; font-weight: 600; font-family: inherit;
+    cursor: pointer; margin-top: 8px;
+    transition: opacity .2s, transform .1s;
+    letter-spacing: .01em;
+    position: relative; overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background .2s;
+  }
+  .btn-primary:hover::after { background: rgba(255,255,255,.06); }
+  .btn-primary:active { transform: scale(.98); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+  .btn-ghost {
+    width: 100%; padding: 10px;
+    background: transparent; border: 1px solid var(--border2);
+    border-radius: 10px; color: var(--sub);
+    font-size: .875rem; font-family: inherit;
+    cursor: pointer; margin-top: 8px;
+    transition: border-color .2s, color .2s;
+  }
+  .btn-ghost:hover { border-color: var(--purple); color: var(--purple); }
+
+  /* ── Error / hint ── */
+  .form-error {
+    color: var(--err);
+    font-size: .8rem;
+    min-height: 20px;
+    margin-top: 10px;
+    text-align: center;
+  }
+  .form-hint {
+    color: var(--muted);
+    font-size: .78rem;
+    text-align: center;
+    margin-top: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Loading overlay ── */
+  #loading-screen {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .spin {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--purple);
+    border-right-color: var(--pink);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--muted); font-size: .875rem; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- Loading (fingerprint check) -->
+<div id="loading-screen">
+  <div class="spin"></div>
+  <span class="loading-text">Checking session…</span>
+</div>
+
+<!-- Auto-login match found -->
+<div id="autologin-screen" class="hidden">
+  <div class="spinner-wrap">
+    <div class="pulse-ring"></div>
+    <div id="al-avatar-wrap"></div>
+  </div>
+  <div>
+    <h2 id="al-name">Welcome back</h2>
+    <p id="al-sub">Signing you in automatically…</p>
+  </div>
+  <button class="btn-ghost" style="width:auto;padding:8px 20px;margin-top:0" onclick="showAuthCard()">
+    Sign in as someone else
+  </button>
+</div>
+
+<!-- Auth Card -->
+<div class="card hidden" id="auth-card">
+  <div class="logo">
+    <div class="logo-mark">⬡</div>
+    <span class="logo-text">NexDrive</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Sign in</button>
+    <button class="tab-btn" id="tab-signup" onclick="switchTab('signup')">Create account</button>
+  </div>
+
+  <!-- Server URL (shared) -->
+  <div class="server-field">
+    <div class="field" style="margin:0">
+      <label>Server address</label>
+      <input type="text" id="server-url" value="http://192.168.1.191:8080" spellcheck="false">
+    </div>
+  </div>
+
+  <!-- Login form -->
+  <div id="form-login">
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="login-username" autocomplete="username" spellcheck="false">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-password" autocomplete="current-password">
+    </div>
+    <div class="form-error" id="login-error"></div>
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign in</button>
+  </div>
+
+  <!-- Signup form -->
+  <div id="form-signup" class="hidden">
+    <div class="field-row">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="reg-username" autocomplete="username" spellcheck="false" maxlength="32">
+      </div>
+      <div class="field">
+        <label>Display name</label>
+        <input type="text" id="reg-display" autocomplete="nickname" maxlength="40">
+      </div>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="reg-password" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label>Confirm password</label>
+      <input type="password" id="reg-confirm" autocomplete="new-password">
+    </div>
+    <div class="form-error" id="reg-error"></div>
+    <button class="btn-primary" id="reg-btn" onclick="doRegister()">Create account</button>
+  </div>
+
+  <p class="form-hint" id="form-hint">
+    Your session is saved to this device for 7 days.
+  </p>
+</div>
+
+<script>
+// ── Constants ────────────────────────────────────────────────────────────────
+const HOME = 'home.html';
+
+// ── Fingerprint ──────────────────────────────────────────────────────────────
+async function getFingerprint() {
+  const parts = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + 'x' + screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency || '',
+    navigator.platform || '',
+  ];
+  // Canvas fingerprint
+  try {
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillText('NexDrive🔑', 2, 2);
+    parts.push(c.toDataURL().slice(-32));
+  } catch {}
+  const raw = parts.join('|');
+  // SHA-256 via SubtleCrypto
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  } catch {
+    return raw; // fallback
+  }
+}
+
+// ── Server ───────────────────────────────────────────────────────────────────
+function server() {
+  return (document.getElementById('server-url').value || '').trim().replace(/\/$/, '');
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(server() + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return { ok: res.ok, status: res.status, data: await res.json() };
+}
+
+// ── Session storage ──────────────────────────────────────────────────────────
+function saveSession(token, display, pfp, srv) {
+  sessionStorage.setItem('nx_token',   token);
+  sessionStorage.setItem('nx_display', display);
+  sessionStorage.setItem('nx_pfp',     pfp || '');
+  sessionStorage.setItem('nx_server',  srv);
+}
+
+function goHome() {
+  window.location.href = HOME;
+}
+
+// ── Tab switch ───────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('form-signup').classList.toggle('hidden', tab !== 'signup');
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('reg-error').textContent = '';
+}
+
+function showAuthCard() {
+  document.getElementById('loading-screen').classList.add('hidden');
+  document.getElementById('autologin-screen').classList.add('hidden');
+  document.getElementById('auth-card').classList.remove('hidden');
+}
+
+// ── Auto-login ───────────────────────────────────────────────────────────────
+async function tryAutoLogin() {
+  // Check if already have a valid session stored
+  const existingToken  = sessionStorage.getItem('nx_token');
+  const existingServer = sessionStorage.getItem('nx_server');
+  if (existingToken && existingServer) {
+    // Validate it still works
+    try {
+      const res = await fetch(existingServer + '/api/me', {
+        headers: { 'X-Auth-Token': existingToken }
+      });
+      if (res.ok) { goHome(); return; }
+    } catch {}
+    // Token dead — clear and continue
+    sessionStorage.clear();
+  }
+
+  // Try fingerprint auto-login
+  let fp;
+  try { fp = await getFingerprint(); } catch { fp = ''; }
+
+  const srv = document.getElementById('server-url').value.trim().replace(/\/$/, '');
+  try {
+    const res = await apiPost('/api/autologin', { fingerprint: fp });
+    if (res.ok && res.data.match) {
+      const { token, display, pfp, username } = res.data;
+      saveSession(token, display, pfp ? srv + pfp : '', srv);
+
+      // Show auto-login UI
+      document.getElementById('loading-screen').classList.add('hidden');
+      const wrap = document.getElementById('al-avatar-wrap');
+      if (pfp) {
+        wrap.innerHTML = `<img class="al-avatar" src="${srv + pfp}" alt="">`;
+      } else {
+        const initials = (display || username || '?')[0].toUpperCase();
+        wrap.innerHTML = `<div class="al-avatar-placeholder">${initials}</div>`;
+      }
+      document.getElementById('al-name').textContent = `Welcome back, ${display || username}`;
+      document.getElementById('autologin-screen').classList.remove('hidden');
+
+      // Auto-redirect after short delay
+      setTimeout(goHome, 1800);
+      return;
+    }
+  } catch {}
+
+  // No match — show auth card
+  showAuthCard();
+}
+
+// ── Login ────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const btn      = document.getElementById('login-btn');
+  const errEl    = document.getElementById('login-error');
+  const username = document.getElementById('login-username').value.trim().toLowerCase();
+  const password = document.getElementById('login-password').value;
+  errEl.textContent = '';
+
+  if (!username) { errEl.textContent = 'Enter your username.'; return; }
+  if (!password) { errEl.textContent = 'Enter your password.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  let fp = '';
+  try { fp = await getFingerprint(); } catch {}
+
+  try {
+    const { ok, data } = await apiPost('/api/login', { username, password, fingerprint: fp });
+    if (!ok) { errEl.textContent = data.error || 'Login failed.'; return; }
+    const srv = server();
+    saveSession(data.token, data.display, data.pfp ? srv + data.pfp : '', srv);
+    goHome();
+  } catch (e) {
+    errEl.textContent = 'Could not reach server. Is run.py running?';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sign in';
+  }
+}
+
+// ── Register ─────────────────────────────────────────────────────────────────
+async function doRegister() {
+  const btn     = document.getElementById('reg-btn');
+  const errEl   = document.getElementById('reg-error');
+  const username = document.getElementById('reg-username').value.trim().toLowerCase();
+  const display  = document.getElementById('reg-display').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const confirm  = document.getElementById('reg-confirm').value;
+  errEl.textContent = '';
+
+  if (!username)           { errEl.textContent = 'Choose a username.'; return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  if (password !== confirm) { errEl.textContent = 'Passwords do not match.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Creating account…';
+
+  let fp = '';
+  try { fp = await getFingerprint(); } catch {}
+
+  try {
+    const { ok, data } = await apiPost('/api/register', { username, display, password, fingerprint: fp });
+    if (!ok) { errEl.textContent = data.error || 'Registration failed.'; return; }
+    const srv = server();
+    saveSession(data.token, data.display, '', srv);
+    goHome();
+  } catch (e) {
+    errEl.textContent = 'Could not reach server. Is run.py running?';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create account';
+  }
+}
+
+// ── Enter key ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const active = document.activeElement?.id;
+  if (['login-username','login-password'].includes(active)) doLogin();
+  if (['reg-username','reg-display','reg-password','reg-confirm'].includes(active)) doRegister();
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+tryAutoLogin();
+</script>
+</body>
+</html>
